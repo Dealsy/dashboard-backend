@@ -1,19 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users.service';
-import { PasswordService } from '../password.service';
+import { UsersService } from '../users/users.service';
+import { PasswordService } from './password.service';
 import { LoginDto } from '../../dto/login.dto';
-import { User } from '@prisma/client';
-import { ConfigService } from '@nestjs/config';
+import { UserRole } from '../../constants';
 
-type TokenPayload = {
+type JwtUser = {
+  userId: string;
   email: string;
-  sub: string;
-};
-
-type TokenResponse = {
-  access_token: string;
-  refresh_token: string;
+  role: UserRole;
 };
 
 @Injectable()
@@ -22,16 +17,12 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
-    private readonly configService: ConfigService,
   ) {}
 
-  async validateUser(
-    email: string,
-    password: string,
-  ): Promise<Omit<User, 'password'>> {
+  async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      return null;
     }
 
     const isPasswordValid = await this.passwordService.comparePassword(
@@ -40,45 +31,40 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      return null;
     }
 
     const { password: _, ...result } = user;
     return result;
   }
 
-  async login(loginDto: LoginDto): Promise<TokenResponse> {
+  async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
-    const payload: TokenPayload = {
-      email: user.email,
-      sub: user.id.toString(),
-    };
-    const refreshExpiration = this.configService.get<string>(
-      'JWT_REFRESH_EXPIRATION',
-      '7d',
-    );
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload),
-      this.jwtService.signAsync(payload, { expiresIn: refreshExpiration }),
-    ]);
+    const payload = {
+      sub: user.id.toString(),
+      email: user.email,
+      role: user.role,
+    };
 
     return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      access_token: this.jwtService.sign(payload),
+      refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
     };
   }
 
-  async refreshToken(
-    user: Omit<User, 'password'>,
-  ): Promise<{ access_token: string }> {
-    const payload: TokenPayload = {
+  async refreshToken(user: JwtUser) {
+    const payload = {
+      sub: user.userId,
       email: user.email,
-      sub: user.id.toString(),
+      role: user.role,
     };
-    const accessToken = await this.jwtService.signAsync(payload);
+
     return {
-      access_token: accessToken,
+      access_token: await this.jwtService.signAsync(payload),
     };
   }
 }

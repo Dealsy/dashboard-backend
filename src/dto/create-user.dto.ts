@@ -1,21 +1,8 @@
-import {
-  IsString,
-  IsEmail,
-  IsNotEmpty,
-  IsStrongPassword,
-} from 'class-validator';
+import { IsEmail, IsString, IsStrongPassword } from 'class-validator';
+import { USER_ROLES } from '../constants';
 
 export class CreateUserDto {
-  @IsString()
-  @IsNotEmpty()
-  firstName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  lastName: string;
-
   @IsEmail()
-  @IsNotEmpty()
   email: string;
 
   @IsString()
@@ -26,6 +13,13 @@ export class CreateUserDto {
     minNumbers: 1,
     minSymbols: 1,
   })
-  @IsNotEmpty()
   password: string;
+
+  @IsString()
+  firstName: string;
+
+  @IsString()
+  lastName: string;
+
+  role: keyof typeof USER_ROLES = USER_ROLES.USER;
 }

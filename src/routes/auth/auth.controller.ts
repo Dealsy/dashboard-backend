@@ -3,7 +3,7 @@ import { AuthService } from '../../services/auth/auth.service';
 import { LoginDto } from '../../dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
-import { User } from '@prisma/client';
+import { UserRole } from '../../constants';
 
 type TokenResponse = {
   access_token: string;
@@ -12,6 +12,12 @@ type TokenResponse = {
 
 type RefreshTokenResponse = {
   access_token: string;
+};
+
+type JwtUser = {
+  userId: string;
+  email: string;
+  role: UserRole;
 };
 
 @Controller('auth')
@@ -26,7 +32,7 @@ export class AuthController {
   @Post('refresh')
   @UseGuards(AuthGuard('jwt'))
   async refreshToken(
-    @Req() req: Request & { user: Omit<User, 'password'> },
+    @Req() req: Request & { user: JwtUser },
   ): Promise<RefreshTokenResponse> {
     return this.authService.refreshToken(req.user);
   }

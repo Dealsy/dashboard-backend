@@ -43,6 +43,13 @@ export class UsersController {
     };
   }
 
+  @Get(':id')
+  @UseGuards(AuthGuard('jwt'))
+  async getUser(@Param('id') id: string) {
+    const user = await this.usersService.findOne(id);
+    return new UserEntity(user);
+  }
+
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
   async deleteUser(@Param('id') id: string) {

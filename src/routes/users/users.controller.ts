@@ -23,7 +23,7 @@ import { RolesGuard } from 'src/guards/roles.guard';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @UseFilters(HttpExceptionFilter)
-@Controller(USER_ROLES.USER)
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

@@ -16,6 +16,7 @@ export const USER_MESSAGES = {
 export const USER_ROLES = {
   ADMIN: 'ADMIN',
   USER: 'USER',
+  SELF: 'SELF',
 } as const;
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];

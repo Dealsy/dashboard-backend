@@ -16,6 +16,9 @@ export class UsersService {
 
   private transformUser = (user: User): UserInterface => ({
     ...user,
+    address: user.address as string | undefined,
+    phone: user.phone as string | undefined,
+    title: user.title as string | undefined,
     role: user.role as keyof typeof USER_ROLES,
   });
 
@@ -99,16 +102,19 @@ export class UsersService {
       if (user.email) updateData.email = user.email;
       if (user.firstName) updateData.firstName = user.firstName;
       if (user.lastName) updateData.lastName = user.lastName;
+      if (user.address) updateData.address = user.address;
+      if (user.phone) updateData.phone = user.phone;
+      if (user.title) updateData.title = user.title;
+      if (user.password) {
+        updateData.password = await this.passwordService.hashPassword(
+          user.password,
+        );
+      }
       if (user.role) {
         if (user.role !== USER_ROLES.ADMIN && user.role !== USER_ROLES.USER) {
           throw new Error('Invalid role value');
         }
         updateData.role = user.role;
-      }
-      if (user.password) {
-        updateData.password = await this.passwordService.hashPassword(
-          user.password,
-        );
       }
 
       return await this.prisma.user.update({

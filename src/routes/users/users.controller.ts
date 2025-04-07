@@ -17,13 +17,13 @@ import { UserEntity } from 'src/dto/user.dto';
 import { HttpExceptionFilter } from 'src/filters/http-exception.filter';
 import { CreateUserDto } from 'src/dto/create-user.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { USER_MESSAGES } from 'src/constants';
+import { USER_MESSAGES, USER_ROLES } from 'src/constants';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RolesGuard } from 'src/guards/roles.guard';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @UseFilters(HttpExceptionFilter)
-@Controller('users')
+@Controller(USER_ROLES.USER)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -38,7 +38,7 @@ export class UsersController {
 
   @Get()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin')
+  @Roles(USER_ROLES.ADMIN)
   async getUsers() {
     const users = await this.usersService.findAll();
     return {
@@ -49,7 +49,7 @@ export class UsersController {
 
   @Get(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('self')
+  @Roles(USER_ROLES.SELF)
   async getUser(@Param('id') id: string) {
     const user = await this.usersService.findOne(id);
     return {
@@ -60,7 +60,7 @@ export class UsersController {
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'self')
+  @Roles(USER_ROLES.ADMIN, USER_ROLES.SELF)
   async deleteUser(@Param('id') id: string) {
     const deletedUser = await this.usersService.delete(id);
     return {
@@ -71,7 +71,7 @@ export class UsersController {
 
   @Put(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('self')
+  @Roles(USER_ROLES.SELF)
   async updateUser(
     @Param('id') id: string,
     @Body() user: Partial<UserInterface>,

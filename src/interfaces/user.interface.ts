@@ -7,6 +7,9 @@ export type UserInterface = {
   lastName: string;
   password: string;
   role: UserRole;
+  address?: string;
+  phone?: string;
+  title?: string;
   createdAt: Date;
   updatedAt: Date;
 };
